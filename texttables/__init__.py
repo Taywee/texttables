@@ -5,6 +5,9 @@
 # This is proprietary software.
 # No warranty, explicit or implicit, provided.
 
+from __future__ import division, absolute_import, print_function, unicode_literals
+import six
+
 __author__ = 'Taylor C. Richberger <tcr@absolute-performance.com>'
 __description__ = 'A Python module for parsing and writing text-based tables'
 __email__ = 'tcr@absolute-performance.com'
@@ -12,3 +15,5 @@ __license__ = 'MIT'
 __modulename__ = 'texttables'
 __version__ = '0.0.1'
 __website__ = 'https://github.com/Taywee/texttables'
+
+__all__ = ['fixed', 'dynamic']

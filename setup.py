@@ -5,6 +5,8 @@
 # This is proprietary software.
 # No warranty, explicit or implicit, provided.
 
+from __future__ import division, absolute_import, print_function, unicode_literals
+
 from setuptools import setup
 
 from texttables import __author__, __description__, __email__, __license__, __modulename__, __version__, __website__
