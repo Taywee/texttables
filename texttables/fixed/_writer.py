@@ -29,16 +29,20 @@ class writer(object):
             if field in fmtparams:
                 setattr(self._dialect, field, fmtparams[field])
             else:
-                setattr(self._dialect, field, getattr(dialect, field))
+                if dialect is not None:
+                    setattr(self._dialect, field, getattr(dialect, field))
 
         self.__wroterow = False
         self.__wroteheader = False
 
     def __enter__(self):
-        self.writetop()
+        if self._dialect.top_border:
+            self.writetop()
+        return self
 
     def __exit__(self, type, value, traceback):
-        self.writebottom()
+        if self._dialect.bottom_border:
+            self.writebottom()
 
     @property
     def file(self):
@@ -78,7 +82,8 @@ class writer(object):
     def _rowdelim(self, delimiter):
         dialect = self._dialect
         delimcontents = list()
-        for width in self._widths:
+        for rawwidth in self._widths:
+            swidth = str(rawwidth)
             try:
                 width = int(swidth)
             except ValueError:
@@ -93,15 +98,15 @@ class writer(object):
         return delim
 
     def writerow(self, row):
+        dialect = self._dialect
         if (self.__wroterow
             and dialect.row_delimiter is not None
             and dialect.corner_border is not None
             ):
             prerow = self._rowdelim(dialect.header_delimiter if self.__wroteheader else dialect.row_delimiter)
-            self.__wroteheader = False
-        if prerow is not None:
             self._file.write(prerow)
             self._file.write(dialect.lineterminator)
+            self.__wroteheader = False
 
         self._file.write(self._row(row))
         self._file.write(dialect.lineterminator)
@@ -112,10 +117,11 @@ class writer(object):
         self.__wroteheader = True
 
     def writetop(self):
+        dialect = self._dialect
         self._file.write(self._rowdelim(dialect.top_border))
         self._file.write(dialect.lineterminator)
 
     def writebottom(self):
+        dialect = self._dialect
         self._file.write(self._rowdelim(dialect.bottom_border))
         self._file.write(dialect.lineterminator)
-

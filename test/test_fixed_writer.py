@@ -22,7 +22,7 @@ class WriterTest(unittest.TestCase):
             w.writerow(('data 1', 'data 2', 'data 3'))
             w.writerow(('data 4', 'data 5', 'data 6'))
 
-        self.assertEquals(data, output.getvalue)
+        self.assertEqual(data, output.getvalue())
 
 if __name__ == '__main__':
     unittest.main()
