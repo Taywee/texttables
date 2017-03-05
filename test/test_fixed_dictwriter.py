@@ -6,19 +6,19 @@
 import unittest
 from six import StringIO
 
-from texttables.fixed import writer
+from texttables.fixed import DictWriter
 from texttables.dialect import Dialect
 
 class WriterTest(unittest.TestCase):
     def test_basic_table(self):
         output = StringIO()
-        with writer(output, [10, 10, 10]) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, 10, 10]) as w:
+            w.writeheader()
+            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
+            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
         data = (
-            'header 1   header 2   header 3  \n'
+            'foo        bar        baz       \n'
             'data 1     data 2     data 3    \n'
             'data 4     data 5     data 6    \n'
             )
@@ -30,13 +30,13 @@ class WriterTest(unittest.TestCase):
             header_delimiter = '='
             corner_border = ' '
         output = StringIO()
-        with writer(output, [10, 10, 10], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, 10, 10], dialect=dialect) as w:
+            w.writeheader()
+            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
+            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
         data = (
-            'header 1   header 2   header 3  \n'
+            'foo        bar        baz       \n'
             '========== ========== ==========\n'
             'data 1     data 2     data 3    \n'
             'data 4     data 5     data 6    \n'
@@ -51,13 +51,13 @@ class WriterTest(unittest.TestCase):
             corner_border = ' '
 
         output = StringIO()
-        with writer(output, [10, 10, 10], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, 10, 10], dialect=dialect) as w:
+            w.writeheader()
+            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
+            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
         data = (
-            'header 1   header 2   header 3  \n'
+            'foo        bar        baz       \n'
             '========== ========== ==========\n'
             'data 1     data 2     data 3    \n'
             '---------- ---------- ----------\n'
@@ -78,14 +78,14 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with writer(output, [10, 10, 10], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, 10, 10], dialect=dialect) as w:
+            w.writeheader()
+            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
+            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
         data = (
             '+##########+##########+##########+\n'
-            '|header 1  |header 2  |header 3  |\n'
+            '|foo       |bar       |baz       |\n'
             '+==========+==========+==========+\n'
             '|data 1    |data 2    |data 3    |\n'
             '+----------+----------+----------+\n'
@@ -107,14 +107,14 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with writer(output, [10, '>10', '^10'], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, '>10', '^10'], dialect=dialect) as w:
+            w.writeheader()
+            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
+            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
         data = (
             '+##########+##########+##########+\n'
-            '|header 1  |  header 2| header 3 |\n'
+            '|foo       |       bar|   baz    |\n'
             '+==========+==========+==========+\n'
             '|data 1    |    data 2|  data 3  |\n'
             '+----------+----------+----------+\n'

@@ -11,5 +11,5 @@ __all__ = [
     'writer',
     ]
 
-from ._writer import writer
+from ._writer import writer, DictWriter
 from ._reader import reader

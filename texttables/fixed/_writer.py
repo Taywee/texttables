@@ -99,17 +99,23 @@ class writer(object):
 
     def writerow(self, row):
         dialect = self._dialect
-        if (self.__wroterow
+        if (self.__wroteheader
+            and dialect.header_delimiter is not None
+            and dialect.corner_border is not None
+            ):
+            self._file.write(self._rowdelim(dialect.header_delimiter))
+            self._file.write(dialect.lineterminator)
+        elif (self.__wroterow
             and dialect.row_delimiter is not None
             and dialect.corner_border is not None
             ):
-            prerow = self._rowdelim(dialect.header_delimiter if self.__wroteheader else dialect.row_delimiter)
-            self._file.write(prerow)
+            self._file.write(self._rowdelim(dialect.row_delimiter))
             self._file.write(dialect.lineterminator)
-            self.__wroteheader = False
 
         self._file.write(self._row(row))
         self._file.write(dialect.lineterminator)
+
+        self.__wroteheader = False
         self.__wroterow = True
 
     def writeheader(self, row):
@@ -125,3 +131,61 @@ class writer(object):
         dialect = self._dialect
         self._file.write(self._rowdelim(dialect.bottom_border))
         self._file.write(dialect.lineterminator)
+
+class DictWriter(object):
+    """Fixed-table document writer, writing tables with predefined column-sizes
+    and names"""
+
+    def __init__(self, file, fieldnames, widths, dialect=None, **fmtparams):
+        """
+        :file: A writable file object with a ``write`` method
+        :fieldnames: A sequence of field names
+        :dialect: A dialect class used to define aspects of the table.
+        :widths: An iterable of widths, containing the field sizes of the table.
+         Each width may be prefixed with <, >, =, or ^, for alignment through
+         the Python format specification.
+        :fmtparams: parameters to override the parameters in dialect.
+        """
+
+        self._writer = writer(file, widths, dialect, **fmtparams)
+        self._fieldnames = fieldnames
+
+    def __enter__(self):
+        self._writer.__enter__()
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self._writer.__exit__(type, value, traceback)
+        return self
+
+    @property
+    def file(self):
+        return self._writer.file
+
+    @property
+    def widths(self):
+        return self._writer.widths
+
+    @property
+    def dialect(self):
+        return self._writer.dialect
+
+    @property
+    def fieldnames(self):
+        return self._fieldnames
+
+    @fieldnames.setter
+    def fieldnames(self, value):
+        self._fieldnames = value
+
+    def writeheader(self):
+        self._writer.writeheader(self._fieldnames)
+
+    def writerow(self, row):
+        self._writer.writerow(row[field] for field in self._fieldnames)
+
+    def writetop(self):
+        self._writer.writetop()
+
+    def writebottom(self):
+        self._writer.writebottom()
