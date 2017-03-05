@@ -11,10 +11,11 @@ wheel: setup.py
 	PYTHONPATH="$(shell pwd)" ./setup.py bdist_wheel
 
 test:
-	PYTHONPATH="$(shell pwd)" python3.5 -m unittest discover ./test
+	PYTHONPATH="$(shell pwd)" python3 -m unittest discover ./test
+	PYTHONPATH="$(shell pwd)" python2 -m unittest discover ./test
 
 tag:
-	git tag -s '$(shell PYTHONPATH="$(pwd)" python3.5 -c 'import texttables; print(texttables.__version__)')'
+	git tag -s '$(shell PYTHONPATH="$(pwd)" python -c 'import texttables; print(texttables.__version__)')'
 
 clean:
 	git clean -xfd
