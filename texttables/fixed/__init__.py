@@ -10,3 +10,6 @@ __all__ = [
     'reader',
     'writer',
     ]
+
+from ._writer import writer
+from ._reader import reader

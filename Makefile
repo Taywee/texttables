@@ -3,12 +3,15 @@
 # This is proprietary software.
 # No warranty, explicit or implicit, provided.
 
-.PHONY: all wheel tag clean
+.PHONY: all wheel tag clean test
 
 all: clean wheel
 
 wheel: setup.py
 	PYTHONPATH="$(shell pwd)" ./setup.py bdist_wheel
+
+test:
+	PYTHONPATH="$(shell pwd)" python3.5 -m unittest discover ./test
 
 tag:
 	git tag -s '$(shell PYTHONPATH="$(pwd)" python3.5 -c 'import texttables; print(texttables.__version__)')'
