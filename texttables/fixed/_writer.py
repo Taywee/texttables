@@ -4,7 +4,6 @@
 # This code is released under the license described in the LICENSE file
 
 from __future__ import division, absolute_import, print_function, unicode_literals
-from six import iteritems
 from six.moves import zip
 
 from texttables.dialect import Dialect, _DIALECTFIELDS
@@ -100,15 +99,11 @@ class writer(object):
     def writerow(self, row):
         dialect = self._dialect
         if self.__wroteheader:
-            if (dialect.header_delimiter is not None
-                and dialect.corner_border is not None
-                ):
+            if dialect.header_delimiter and dialect.corner_border:
                 self._file.write(self._rowdelim(dialect.header_delimiter))
                 self._file.write(dialect.lineterminator)
         elif self.__wroterow:
-            if (dialect.row_delimiter is not None
-                and dialect.corner_border is not None
-                ):
+            if dialect.row_delimiter and dialect.corner_border:
                 self._file.write(self._rowdelim(dialect.row_delimiter))
                 self._file.write(dialect.lineterminator)
 
