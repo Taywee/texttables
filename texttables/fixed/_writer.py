@@ -118,6 +118,10 @@ class writer(object):
         self.__wroteheader = False
         self.__wroterow = True
 
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)
+
     def writeheader(self, row):
         self.writerow(row)
         self.__wroteheader = True
@@ -183,6 +187,10 @@ class DictWriter(object):
 
     def writerow(self, row):
         self._writer.writerow(row[field] for field in self._fieldnames)
+
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)
 
     def writetop(self):
         self._writer.writetop()

@@ -55,6 +55,9 @@ class writer(object):
     def writerow(self, row):
         self._rows.append(row)
 
+    def writerows(self, rows):
+        self._rows.extend(rows)
+
     def finish(self):
         # Initiate all widths to 0
         widths = [0 for i in self._rows[0]]
@@ -127,3 +130,7 @@ class DictWriter(object):
 
     def writerow(self, row):
         self._writer.writerow(tuple(row[field] for field in self._fieldnames))
+
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)

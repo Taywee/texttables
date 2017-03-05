@@ -144,5 +144,34 @@ class WriterTest(unittest.TestCase):
             )
         self.assertEqual(data, output.getvalue())
 
+    def test_writerows(self):
+        class dialect(Dialect):
+            header_delimiter = '='
+            row_delimiter = '-'
+            top_border = '#'
+            bottom_border = '_'
+            left_border = '|'
+            cell_delimiter = '|'
+            right_border = '|'
+            corner_border = '+'
+        output = StringIO()
+
+        with DictWriter(output, ['foo', 'bar', 'baz'], [10, '>10', '^10'], dialect=dialect) as w:
+            w.writeheader()
+            w.writerows([
+                {'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'},
+                {'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'}])
+
+        data = (
+            '+##########+##########+##########+\n'
+            '|foo       |       bar|   baz    |\n'
+            '+==========+==========+==========+\n'
+            '|data 1    |    data 2|  data 3  |\n'
+            '+----------+----------+----------+\n'
+            '|data 4    |    data 5|  data 6  |\n'
+            '+__________+__________+__________+\n'
+            )
+        self.assertEqual(data, output.getvalue())
+
 if __name__ == '__main__':
     unittest.main()
