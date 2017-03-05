@@ -99,18 +99,18 @@ class writer(object):
 
     def writerow(self, row):
         dialect = self._dialect
-        if (self.__wroteheader
-            and dialect.header_delimiter is not None
-            and dialect.corner_border is not None
-            ):
-            self._file.write(self._rowdelim(dialect.header_delimiter))
-            self._file.write(dialect.lineterminator)
-        elif (self.__wroterow
-            and dialect.row_delimiter is not None
-            and dialect.corner_border is not None
-            ):
-            self._file.write(self._rowdelim(dialect.row_delimiter))
-            self._file.write(dialect.lineterminator)
+        if self.__wroteheader:
+            if (dialect.header_delimiter is not None
+                and dialect.corner_border is not None
+                ):
+                self._file.write(self._rowdelim(dialect.header_delimiter))
+                self._file.write(dialect.lineterminator)
+        elif self.__wroterow:
+            if (dialect.row_delimiter is not None
+                and dialect.corner_border is not None
+                ):
+                self._file.write(self._rowdelim(dialect.row_delimiter))
+                self._file.write(dialect.lineterminator)
 
         self._file.write(self._row(row))
         self._file.write(dialect.lineterminator)

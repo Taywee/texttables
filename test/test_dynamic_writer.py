@@ -66,6 +66,27 @@ class WriterTest(unittest.TestCase):
 
         self.assertEqual(data, output.getvalue())
 
+    def test_basic_table_row_delim(self):
+        class dialect(Dialect):
+            header_delimiter = None
+            row_delimiter = '-'
+            corner_border = ' '
+
+        output = StringIO()
+        with writer(output, dialect=dialect) as w:
+            w.writeheader(('header 1', 'header 2', 'header 3'))
+            w.writerow(('data 1', 'data 2', 'data 3'))
+            w.writerow(('data 4', 'data 5', 'data 6'))
+
+        data = (
+            'header 1 header 2 header 3\n'
+            'data 1   data 2   data 3  \n'
+            '-------- -------- --------\n'
+            'data 4   data 5   data 6  \n'
+            )
+
+        self.assertEqual(data, output.getvalue())
+
     def test_full_borders(self):
         class dialect(Dialect):
             header_delimiter = '='

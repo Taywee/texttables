@@ -13,7 +13,7 @@ __description__ = 'A Python module for parsing and writing text-based tables'
 __email__ = 'tcr@absolute-performance.com'
 __license__ = 'MIT'
 __modulename__ = 'texttables'
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __website__ = 'https://github.com/Taywee/texttables'
 
 __all__ = ['fixed', 'dynamic']
