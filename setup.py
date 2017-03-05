@@ -21,6 +21,7 @@ setup(
     license=__license__,
     packages=[
         'texttables',
+        'texttables.fixed',
         ],
     install_requires=[
         'six',
