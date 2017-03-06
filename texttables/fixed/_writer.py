@@ -23,8 +23,7 @@ class writer(object):
         self._file = file
         self._widths = tuple(widths)
 
-        if dialect:
-            self.dialect = dialect
+        self.dialect = dialect
 
         for attribute in dir(self.dialect):
             if '__' not in attribute:
@@ -58,9 +57,10 @@ class writer(object):
     @dialect.setter
     def dialect(self, value):
         self._dialect = Dialect()
-        for attribute in dir(self._dialect):
-            if '__' not in attribute:
-                setattr(self._dialect, attribute, getattr(value, attribute))
+        if value:
+            for attribute in dir(self._dialect):
+                if '__' not in attribute:
+                    setattr(self._dialect, attribute, getattr(value, attribute))
 
     def _row(self, row):
         dialect = self.dialect
