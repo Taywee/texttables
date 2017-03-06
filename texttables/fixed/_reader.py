@@ -7,7 +7,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 from six.moves import zip
 from numbers import Integral
 
-from texttables.dialect import Dialect, _DIALECTFIELDS
+from texttables.dialect import Dialect
 
 class reader(object):
 
@@ -17,10 +17,12 @@ class reader(object):
         """
         :file: An iterable object, returning a line with each iteration.
         :widths: An iterable of widths, containing the field sizes of the table.
-         Each width may be prefixed with <, >, =, or ^, for alignment through
-         the Python format specification, though these prefixes will be ignored
-         if they are present.
-        :dialect: A dialect class used to define aspects of the table.
+            Each width may be prefixed with <, >, =, or ^, for alignment through
+            the Python format specification, though these prefixes will be ignored
+            if they are present.
+        :dialect: A dialect class or object used to define aspects of the table.
+            The stored dialect is always an instance of Dialect, not the passed-in
+            object.
         :fmtparams: parameters to override the parameters in dialect.
         """
         self._file = file
@@ -36,12 +38,13 @@ class reader(object):
                     width = int(swidth[1:])
                 self._widths.append(width)
         self._dialect = Dialect()
-        for field in _DIALECTFIELDS:
-            if field in fmtparams:
-                setattr(self._dialect, field, fmtparams[field])
-            else:
-                if dialect is not None:
-                    setattr(self._dialect, field, getattr(dialect, field))
+        for attribute in dir(self._dialect):
+            if '__' not in attribute:
+                if attribute in fmtparams:
+                    setattr(self._dialect, field, fmtparams[attribute])
+                else:
+                    if dialect is not None:
+                        setattr(self._dialect, attribute, getattr(dialect, attribute))
 
         self.__foundtop = not self._dialect.top_border
         self.__foundheader = not self._dialect.header_delimiter

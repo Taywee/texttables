@@ -6,7 +6,6 @@
 from __future__ import division, absolute_import, print_function, unicode_literals
 from six.moves import zip
 
-from texttables.dialect import Dialect, _DIALECTFIELDS
 from texttables.fixed import writer as fixedwriter
 
 class writer(object):

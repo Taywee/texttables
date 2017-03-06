@@ -5,8 +5,7 @@
 
 from __future__ import division, absolute_import, print_function, unicode_literals
 from six.moves import zip
-
-from texttables.dialect import Dialect, _DIALECTFIELDS
+from texttables.dialect import Dialect
 
 class writer(object):
 
@@ -24,12 +23,13 @@ class writer(object):
         self._file = file
         self._widths = tuple(widths)
         self._dialect = Dialect()
-        for field in _DIALECTFIELDS:
-            if field in fmtparams:
-                setattr(self._dialect, field, fmtparams[field])
-            else:
-                if dialect is not None:
-                    setattr(self._dialect, field, getattr(dialect, field))
+        for attribute in dir(self._dialect):
+            if '__' not in attribute:
+                if attribute in fmtparams:
+                    setattr(self._dialect, field, fmtparams[attribute])
+                else:
+                    if dialect is not None:
+                        setattr(self._dialect, attribute, getattr(dialect, attribute))
 
         self.__wroterow = False
         self.__wroteheader = False
