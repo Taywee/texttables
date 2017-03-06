@@ -14,7 +14,7 @@ class Dialect(object):
     one-offs, but subclassing is usually clearer."""
 
     #: Delimiter character separating header from rows.  None to disable
-    header_delimiter = '='  
+    header_delimiter = None
 
     #: Delimiter character separating rows from one another.  None to disable
     row_delimiter = None    
@@ -40,7 +40,7 @@ class Dialect(object):
 
     #: Border character for corners on each border and on the row and header
     #: delimiters.  Required when the borders or delimiters are specified.
-    corner_border = None    
+    corner_border = '+'
 
     #: Line terminator.  Used only for writing tables, and ignored on reading
     lineterminator = '\n'   

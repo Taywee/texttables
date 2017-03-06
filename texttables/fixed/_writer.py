@@ -22,25 +22,25 @@ class writer(object):
         """
         self._file = file
         self._widths = tuple(widths)
-        self._dialect = Dialect()
-        for attribute in dir(self._dialect):
+
+        if dialect:
+            self.dialect = dialect
+
+        for attribute in dir(self.dialect):
             if '__' not in attribute:
                 if attribute in fmtparams:
-                    setattr(self._dialect, field, fmtparams[attribute])
-                else:
-                    if dialect is not None:
-                        setattr(self._dialect, attribute, getattr(dialect, attribute))
+                    setattr(self._dialect, attribute, fmtparams[attribute])
 
         self.__wroterow = False
         self.__wroteheader = False
 
     def __enter__(self):
-        if self._dialect.top_border:
+        if self.dialect.top_border:
             self.writetop()
         return self
 
     def __exit__(self, type, value, traceback):
-        if self._dialect.bottom_border:
+        if self.dialect.bottom_border:
             self.writebottom()
 
     @property
@@ -55,8 +55,15 @@ class writer(object):
     def dialect(self):
         return self._dialect
 
+    @dialect.setter
+    def dialect(self, value):
+        self._dialect = Dialect()
+        for attribute in dir(self._dialect):
+            if '__' not in attribute:
+                setattr(self._dialect, attribute, getattr(value, attribute))
+
     def _row(self, row):
-        dialect = self._dialect
+        dialect = self.dialect
         contents = list()
         for cell, rawwidth in zip(row, self._widths):
             swidth = str(rawwidth)
@@ -79,7 +86,7 @@ class writer(object):
         return row
 
     def _rowdelim(self, delimiter):
-        dialect = self._dialect
+        dialect = self.dialect
         delimcontents = list()
         for rawwidth in self._widths:
             swidth = str(rawwidth)
@@ -97,7 +104,7 @@ class writer(object):
         return delim
 
     def writerow(self, row):
-        dialect = self._dialect
+        dialect = self.dialect
         if self.__wroteheader:
             if dialect.header_delimiter and dialect.corner_border:
                 self._file.write(self._rowdelim(dialect.header_delimiter))
@@ -122,12 +129,12 @@ class writer(object):
         self.__wroteheader = True
 
     def writetop(self):
-        dialect = self._dialect
+        dialect = self.dialect
         self._file.write(self._rowdelim(dialect.top_border))
         self._file.write(dialect.lineterminator)
 
     def writebottom(self):
-        dialect = self._dialect
+        dialect = self.dialect
         self._file.write(self._rowdelim(dialect.bottom_border))
         self._file.write(dialect.lineterminator)
 
@@ -168,6 +175,10 @@ class DictWriter(object):
     @property
     def dialect(self):
         return self._writer.dialect
+
+    @dialect.setter
+    def dialect(self, value):
+        self._writer.dialect = value
 
     @property
     def fieldnames(self):

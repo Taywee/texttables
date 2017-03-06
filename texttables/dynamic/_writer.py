@@ -40,6 +40,10 @@ class writer(object):
     def dialect(self):
         return self._dialect
 
+    @dialect.setter
+    def dialect(self, value):
+        self._dialect = value
+
     @property
     def rows(self):
         return self._rows
