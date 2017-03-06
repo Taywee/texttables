@@ -9,7 +9,7 @@ from six import StringIO
 from texttables.dynamic import writer
 from texttables.dialect import Dialect
 
-class WriterTest(unittest.TestCase):
+class DynamicWriterTest(unittest.TestCase):
     def run_asserts(self, writer, data, output):
         with writer as w:
             w.writeheader(('header 1', 'header 2', 'header 3'))

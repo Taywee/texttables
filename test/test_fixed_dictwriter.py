@@ -9,7 +9,7 @@ from six import StringIO
 from texttables.fixed import DictWriter
 from texttables.dialect import Dialect
 
-class WriterTest(unittest.TestCase):
+class FixedDictWriterTest(unittest.TestCase):
     def run_asserts(self, writer, data, output):
         with writer as w:
             w.writeheader()

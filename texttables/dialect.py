@@ -22,6 +22,7 @@ class Dialect(object):
     corner_border = None
     lineterminator = '\n'
     strict = False
+    strip = True
 
 _DIALECTFIELDS = {
     'header_delimiter',
@@ -34,4 +35,5 @@ _DIALECTFIELDS = {
     'corner_border',
     'lineterminator',
     'strict',
+    'strip',
     }

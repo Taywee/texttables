@@ -6,10 +6,10 @@
 import unittest
 from six import StringIO
 
-from texttables.fixed import writer
+from texttables.dynamic import writer
 from texttables.dialect import Dialect
 
-class FixedWriterTest(unittest.TestCase):
+class DynamicReaderTest(unittest.TestCase):
     def run_asserts(self, writer, data, output):
         with writer as w:
             w.writeheader(('header 1', 'header 2', 'header 3'))
@@ -21,11 +21,11 @@ class FixedWriterTest(unittest.TestCase):
     def test_basic_table(self):
         output = StringIO()
         data = (
-            'header 1   header 2   header 3  \n'
-            'data 1     data 2     data 3    \n'
-            'data 4     data 5     data 6    \n'
+            'header 1 header 2 header 3\n'
+            'data 1   data 2   data 3  \n'
+            'data 4   data 5   data 6  \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10]), data, output)
+        self.run_asserts(writer(output), data, output)
 
     def test_basic_table_header_delim(self):
         class dialect(Dialect):
@@ -33,13 +33,12 @@ class FixedWriterTest(unittest.TestCase):
             corner_border = ' '
         output = StringIO()
         data = (
-            'header 1   header 2   header 3  \n'
-            '========== ========== ==========\n'
-            'data 1     data 2     data 3    \n'
-            'data 4     data 5     data 6    \n'
+            'header 1 header 2 header 3\n'
+            '======== ======== ========\n'
+            'data 1   data 2   data 3  \n'
+            'data 4   data 5   data 6  \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
-
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_basic_table_header_row_delim(self):
         class dialect(Dialect):
@@ -49,13 +48,13 @@ class FixedWriterTest(unittest.TestCase):
 
         output = StringIO()
         data = (
-            'header 1   header 2   header 3  \n'
-            '========== ========== ==========\n'
-            'data 1     data 2     data 3    \n'
-            '---------- ---------- ----------\n'
-            'data 4     data 5     data 6    \n'
+            'header 1 header 2 header 3\n'
+            '======== ======== ========\n'
+            'data 1   data 2   data 3  \n'
+            '-------- -------- --------\n'
+            'data 4   data 5   data 6  \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_basic_table_row_delim(self):
         class dialect(Dialect):
@@ -65,12 +64,12 @@ class FixedWriterTest(unittest.TestCase):
 
         output = StringIO()
         data = (
-            'header 1   header 2   header 3  \n'
-            'data 1     data 2     data 3    \n'
-            '---------- ---------- ----------\n'
-            'data 4     data 5     data 6    \n'
+            'header 1 header 2 header 3\n'
+            'data 1   data 2   data 3  \n'
+            '-------- -------- --------\n'
+            'data 4   data 5   data 6  \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_full_borders(self):
         class dialect(Dialect):
@@ -85,15 +84,15 @@ class FixedWriterTest(unittest.TestCase):
         output = StringIO()
 
         data = (
-            '+##########+##########+##########+\n'
-            '|header 1  |header 2  |header 3  |\n'
-            '+==========+==========+==========+\n'
-            '|data 1    |data 2    |data 3    |\n'
-            '+----------+----------+----------+\n'
-            '|data 4    |data 5    |data 6    |\n'
-            '+__________+__________+__________+\n'
+            '+########+########+########+\n'
+            '|header 1|header 2|header 3|\n'
+            '+========+========+========+\n'
+            '|data 1  |data 2  |data 3  |\n'
+            '+--------+--------+--------+\n'
+            '|data 4  |data 5  |data 6  |\n'
+            '+________+________+________+\n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_alignment(self):
         class dialect(Dialect):
@@ -108,16 +107,16 @@ class FixedWriterTest(unittest.TestCase):
         output = StringIO()
 
         data = (
-            '+##########+##########+##########+\n'
-            '|header 1  |  header 2| header 3 |\n'
-            '+==========+==========+==========+\n'
-            '|data 1    |    data 2|  data 3  |\n'
-            '+----------+----------+----------+\n'
-            '|data 4    |    data 5|  data 6  |\n'
-            '+__________+__________+__________+\n'
+            '+########+########+########+\n'
+            '|header 1|header 2|header 3|\n'
+            '+========+========+========+\n'
+            '|data 1  |  data 2| data 3 |\n'
+            '+--------+--------+--------+\n'
+            '|data 4  |  data 5| data 6 |\n'
+            '+________+________+________+\n'
             )
-        self.run_asserts(writer(output, [10, '>10', '^10'], dialect=dialect), data, output)
-
+        self.run_asserts(writer(output, ['', '>', '^'], dialect=dialect), data,
+                output)
     def test_writerows(self):
         class dialect(Dialect):
             header_delimiter = '='
@@ -130,21 +129,20 @@ class FixedWriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        # we don't use "run_asserts" here because we want to test writerows
-        with writer(output, [10, '>10', '^10'], dialect=dialect) as w:
+        with writer(output, ['', '>', '^'], dialect=dialect) as w:
             w.writeheader(('header 1', 'header 2', 'header 3'))
             w.writerows([
                 ('data 1', 'data 2', 'data 3'),
                 ('data 4', 'data 5', 'data 6')])
 
         data = (
-            '+##########+##########+##########+\n'
-            '|header 1  |  header 2| header 3 |\n'
-            '+==========+==========+==========+\n'
-            '|data 1    |    data 2|  data 3  |\n'
-            '+----------+----------+----------+\n'
-            '|data 4    |    data 5|  data 6  |\n'
-            '+__________+__________+__________+\n'
+            '+########+########+########+\n'
+            '|header 1|header 2|header 3|\n'
+            '+========+========+========+\n'
+            '|data 1  |  data 2| data 3 |\n'
+            '+--------+--------+--------+\n'
+            '|data 4  |  data 5| data 6 |\n'
+            '+________+________+________+\n'
             )
         self.assertEqual(data, output.getvalue())
 

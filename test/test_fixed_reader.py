@@ -6,39 +6,45 @@
 import unittest
 from six import StringIO
 
-from texttables.fixed import writer
+from texttables.fixed import reader
 from texttables.dialect import Dialect
 
-class FixedWriterTest(unittest.TestCase):
-    def run_asserts(self, writer, data, output):
-        with writer as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
+class FixedReaderTest(unittest.TestCase):
+    def run_unstripped_asserts(self, reader):
+        self.assertEqual(reader.fieldnames, ('header 1  ', 'header 2  ', 'header 3  '))
+        rows = list()
+        rows = [row for row in reader]
+        self.assertEqual(rows, [
+            ('data 1    ', 'data 2    ', 'data 3    '),
+            ('data 4    ', 'data 5    ', 'data 6    ')])
 
-        self.assertEqual(data, output.getvalue())
+    def run_asserts(self, reader):
+        self.assertEqual(reader.fieldnames, ('header 1', 'header 2', 'header 3'))
+        rows = list()
+        rows = [row for row in reader]
+        self.assertEqual(rows, [
+            ('data 1', 'data 2', 'data 3'),
+            ('data 4', 'data 5', 'data 6')])
 
     def test_basic_table(self):
-        output = StringIO()
         data = (
             'header 1   header 2   header 3  \n'
             'data 1     data 2     data 3    \n'
             'data 4     data 5     data 6    \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10]), data, output)
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10]))
 
     def test_basic_table_header_delim(self):
         class dialect(Dialect):
             header_delimiter = '='
             corner_border = ' '
-        output = StringIO()
         data = (
             'header 1   header 2   header 3  \n'
             '========== ========== ==========\n'
             'data 1     data 2     data 3    \n'
             'data 4     data 5     data 6    \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
 
     def test_basic_table_header_row_delim(self):
@@ -46,6 +52,7 @@ class FixedWriterTest(unittest.TestCase):
             header_delimiter = '='
             row_delimiter = '-'
             corner_border = ' '
+            strip = False
 
         output = StringIO()
         data = (
@@ -55,7 +62,7 @@ class FixedWriterTest(unittest.TestCase):
             '---------- ---------- ----------\n'
             'data 4     data 5     data 6    \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_unstripped_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
     def test_basic_table_row_delim(self):
         class dialect(Dialect):
@@ -70,7 +77,7 @@ class FixedWriterTest(unittest.TestCase):
             '---------- ---------- ----------\n'
             'data 4     data 5     data 6    \n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
     def test_full_borders(self):
         class dialect(Dialect):
@@ -93,7 +100,7 @@ class FixedWriterTest(unittest.TestCase):
             '|data 4    |data 5    |data 6    |\n'
             '+__________+__________+__________+\n'
             )
-        self.run_asserts(writer(output, [10, 10, 10], dialect=dialect), data, output)
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
     def test_alignment(self):
         class dialect(Dialect):
@@ -116,9 +123,9 @@ class FixedWriterTest(unittest.TestCase):
             '|data 4    |    data 5|  data 6  |\n'
             '+__________+__________+__________+\n'
             )
-        self.run_asserts(writer(output, [10, '>10', '^10'], dialect=dialect), data, output)
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
-    def test_writerows(self):
+    def test_nofieldnames(self):
         class dialect(Dialect):
             header_delimiter = '='
             row_delimiter = '-'
@@ -130,23 +137,14 @@ class FixedWriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        # we don't use "run_asserts" here because we want to test writerows
-        with writer(output, [10, '>10', '^10'], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerows([
-                ('data 1', 'data 2', 'data 3'),
-                ('data 4', 'data 5', 'data 6')])
-
         data = (
             '+##########+##########+##########+\n'
-            '|header 1  |  header 2| header 3 |\n'
-            '+==========+==========+==========+\n'
             '|data 1    |    data 2|  data 3  |\n'
             '+----------+----------+----------+\n'
             '|data 4    |    data 5|  data 6  |\n'
             '+__________+__________+__________+\n'
             )
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], fieldnames=('header 1', 'header 2', 'header 3'), dialect=dialect))
 
 if __name__ == '__main__':
     unittest.main()
