@@ -10,39 +10,35 @@ from texttables.dynamic import DictWriter
 from texttables.dialect import Dialect
 
 class WriterTest(unittest.TestCase):
-    def test_basic_table(self):
-        output = StringIO()
-        with DictWriter(output, ['foo', 'bar', 'baz']) as w:
+    def run_asserts(self, writer, data, output):
+        with writer as w:
             w.writeheader()
             w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
             w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
 
+        self.assertEqual(data, output.getvalue())
+
+    def test_basic_table(self):
+        output = StringIO()
         data = (
             'foo    bar    baz   \n'
             'data 1 data 2 data 3\n'
             'data 4 data 5 data 6\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz']), data, output)
 
     def test_basic_table_header_delim(self):
         class dialect(Dialect):
             header_delimiter = '='
             corner_border = ' '
         output = StringIO()
-        with DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect) as w:
-            w.writeheader()
-            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
-            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
-
         data = (
             'foo    bar    baz   \n'
             '====== ====== ======\n'
             'data 1 data 2 data 3\n'
             'data 4 data 5 data 6\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect), data, output)
 
     def test_basic_table_header_row_delim(self):
         class dialect(Dialect):
@@ -51,11 +47,6 @@ class WriterTest(unittest.TestCase):
             corner_border = ' '
 
         output = StringIO()
-        with DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect) as w:
-            w.writeheader()
-            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
-            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
-
         data = (
             'foo    bar    baz   \n'
             '====== ====== ======\n'
@@ -63,8 +54,7 @@ class WriterTest(unittest.TestCase):
             '------ ------ ------\n'
             'data 4 data 5 data 6\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect), data, output)
 
     def test_basic_table_row_delim(self):
         class dialect(Dialect):
@@ -73,19 +63,13 @@ class WriterTest(unittest.TestCase):
             corner_border = ' '
 
         output = StringIO()
-        with DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect) as w:
-            w.writeheader()
-            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
-            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
-
         data = (
             'foo    bar    baz   \n'
             'data 1 data 2 data 3\n'
             '------ ------ ------\n'
             'data 4 data 5 data 6\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect), data, output)
 
     def test_full_borders(self):
         class dialect(Dialect):
@@ -99,11 +83,6 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect) as w:
-            w.writeheader()
-            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
-            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
-
         data = (
             '+######+######+######+\n'
             '|foo   |bar   |baz   |\n'
@@ -113,8 +92,7 @@ class WriterTest(unittest.TestCase):
             '|data 4|data 5|data 6|\n'
             '+______+______+______+\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz'], dialect=dialect), data, output)
 
     def test_alignment(self):
         class dialect(Dialect):
@@ -128,11 +106,6 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with DictWriter(output, ['foo', 'bar', 'baz'], ['', '>', '^'], dialect=dialect) as w:
-            w.writeheader()
-            w.writerow({'foo': 'data 1', 'bar': 'data 2', 'baz': 'data 3'})
-            w.writerow({'foo': 'data 4', 'bar': 'data 5', 'baz': 'data 6'})
-
         data = (
             '+######+######+######+\n'
             '|foo   |   bar| baz  |\n'
@@ -142,7 +115,7 @@ class WriterTest(unittest.TestCase):
             '|data 4|data 5|data 6|\n'
             '+______+______+______+\n'
             )
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(DictWriter(output, ['foo', 'bar', 'baz'], ['', '>', '^'], dialect=dialect), data, output)
 
     def test_writerows(self):
         class dialect(Dialect):

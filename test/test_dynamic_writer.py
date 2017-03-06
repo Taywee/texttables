@@ -10,39 +10,35 @@ from texttables.dynamic import writer
 from texttables.dialect import Dialect
 
 class WriterTest(unittest.TestCase):
-    def test_basic_table(self):
-        output = StringIO()
-        with writer(output) as w:
+    def run_asserts(self, writer, data, output):
+        with writer as w:
             w.writeheader(('header 1', 'header 2', 'header 3'))
             w.writerow(('data 1', 'data 2', 'data 3'))
             w.writerow(('data 4', 'data 5', 'data 6'))
 
+        self.assertEqual(data, output.getvalue())
+
+    def test_basic_table(self):
+        output = StringIO()
         data = (
             'header 1 header 2 header 3\n'
             'data 1   data 2   data 3  \n'
             'data 4   data 5   data 6  \n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(writer(output), data, output)
 
     def test_basic_table_header_delim(self):
         class dialect(Dialect):
             header_delimiter = '='
             corner_border = ' '
         output = StringIO()
-        with writer(output, dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
-
         data = (
             'header 1 header 2 header 3\n'
             '======== ======== ========\n'
             'data 1   data 2   data 3  \n'
             'data 4   data 5   data 6  \n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_basic_table_header_row_delim(self):
         class dialect(Dialect):
@@ -51,11 +47,6 @@ class WriterTest(unittest.TestCase):
             corner_border = ' '
 
         output = StringIO()
-        with writer(output, dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
-
         data = (
             'header 1 header 2 header 3\n'
             '======== ======== ========\n'
@@ -63,8 +54,7 @@ class WriterTest(unittest.TestCase):
             '-------- -------- --------\n'
             'data 4   data 5   data 6  \n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_basic_table_row_delim(self):
         class dialect(Dialect):
@@ -73,19 +63,13 @@ class WriterTest(unittest.TestCase):
             corner_border = ' '
 
         output = StringIO()
-        with writer(output, dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
-
         data = (
             'header 1 header 2 header 3\n'
             'data 1   data 2   data 3  \n'
             '-------- -------- --------\n'
             'data 4   data 5   data 6  \n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_full_borders(self):
         class dialect(Dialect):
@@ -99,11 +83,6 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with writer(output, dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
-
         data = (
             '+########+########+########+\n'
             '|header 1|header 2|header 3|\n'
@@ -113,8 +92,7 @@ class WriterTest(unittest.TestCase):
             '|data 4  |data 5  |data 6  |\n'
             '+________+________+________+\n'
             )
-
-        self.assertEqual(data, output.getvalue())
+        self.run_asserts(writer(output, dialect=dialect), data, output)
 
     def test_alignment(self):
         class dialect(Dialect):
@@ -128,11 +106,6 @@ class WriterTest(unittest.TestCase):
             corner_border = '+'
         output = StringIO()
 
-        with writer(output, ['', '>', '^'], dialect=dialect) as w:
-            w.writeheader(('header 1', 'header 2', 'header 3'))
-            w.writerow(('data 1', 'data 2', 'data 3'))
-            w.writerow(('data 4', 'data 5', 'data 6'))
-
         data = (
             '+########+########+########+\n'
             '|header 1|header 2|header 3|\n'
@@ -142,8 +115,8 @@ class WriterTest(unittest.TestCase):
             '|data 4  |  data 5| data 6 |\n'
             '+________+________+________+\n'
             )
-        self.assertEqual(data, output.getvalue())
-
+        self.run_asserts(writer(output, ['', '>', '^'], dialect=dialect), data,
+                output)
     def test_writerows(self):
         class dialect(Dialect):
             header_delimiter = '='
