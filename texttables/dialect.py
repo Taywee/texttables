@@ -17,38 +17,38 @@ class Dialect(object):
     header_delimiter = None
 
     #: Delimiter character separating rows from one another.  None to disable
-    row_delimiter = None    
+    row_delimiter = None
 
     #: Delimiter character separating cells from one another.  Must exist.
-    cell_delimiter = ' '    
+    cell_delimiter = ' '
 
     #: Border character for non-corners on the left side of each row. None to
-    #: disable 
-    left_border = None      
+    #: disable
+    left_border = None
 
     #: Border character for non-corners on the right side of each row. None to
-    #: disable 
-    right_border = None     
+    #: disable
+    right_border = None
 
     #: Border character for non-corners on the top side of the top cells.  None
     #: to disable
-    top_border = None       
+    top_border = None
 
     #: Border character for non-corners on the bottom side of the bottom cells.
     #: None to disable
-    bottom_border = None    
+    bottom_border = None
 
     #: Border character for corners on each border and on the row and header
     #: delimiters.  Required when the borders or delimiters are specified.
     corner_border = '+'
 
     #: Line terminator.  Used only for writing tables, and ignored on reading
-    lineterminator = '\n'   
+    lineterminator = '\n'
 
     #: Whether to raise an exception on read errors, such as borders appearing
     #: in the wrong order or missing borders.
-    strict = False          
+    strict = True
 
     #: Whether to strip fields on reads.  This is usually desired, especially
     #: for DictReader types.
-    strip = True            
+    strip = True
