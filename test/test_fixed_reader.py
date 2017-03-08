@@ -125,6 +125,29 @@ class FixedReaderTest(unittest.TestCase):
             )
         self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
+    def test_samebottom(self):
+        class dialect(Dialect):
+            header_delimiter = '='
+            row_delimiter = '-'
+            top_border = '#'
+            bottom_border = '-'
+            left_border = '|'
+            cell_delimiter = '|'
+            right_border = '|'
+            corner_border = '+'
+        output = StringIO()
+
+        data = (
+            '+##########+##########+##########+\n'
+            '|header 1  |  header 2| header 3 |\n'
+            '+==========+==========+==========+\n'
+            '|data 1    |    data 2|  data 3  |\n'
+            '+----------+----------+----------+\n'
+            '|data 4    |    data 5|  data 6  |\n'
+            '+----------+----------+----------+\n'
+            )
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
+
     def test_nofieldnames(self):
         class dialect(Dialect):
             header_delimiter = '='

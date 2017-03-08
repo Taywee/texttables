@@ -64,6 +64,7 @@ class reader(Iterator):
                 self.__header = self._rowdelim(self.dialect.header_delimiter)
 
         self.__foundbottom = not self.dialect.bottom_border
+        self.__finished = False
         self.__bottom = None
         if self.dialect.bottom_border:
             self.__bottom = self._rowdelim(self.dialect.bottom_border)
@@ -179,10 +180,27 @@ class reader(Iterator):
     def __next__(self):
         fieldnames = self.fieldnames
 
-        line = next(self._iter).strip('\r\n')
-        if self.__row_delimiter and not self.__first_line:
-            if self.dialect.strict and line != self.__row_delimiter:
-                raise ValidationError("This row wasn't properly delimited")
+        if self.__finished:
+            raise StopIteration
+
+        try:
             line = next(self._iter).strip('\r\n')
+            if self.__row_delimiter and not self.__first_line:
+                if line != self.__row_delimiter:
+                    if line == self.__bottom:
+                        self.__foundbottom = True
+                        self.__finished = True
+                        raise StopIteration
+                    if self.dialect.strict:
+                        raise ValidationError("This row wasn't properly delimited")
+                line = next(self._iter).strip('\r\n')
+        except StopIteration:
+            # Try to detect if the bottom was found.  If the bottom wasn't
+            # found, make sure the bottom doesn't match the row delimiter, which
+            # would prevent the bottom from being detected at all
+            if self.dialect.strict and not (self.__foundbottom or
+                    self.__row_delimiter == self.__bottom):
+                raise ValidationError("This table wasn't properly terminated")
+            raise StopIteration
         self.__first_line = False
         return self._getline(line)
