@@ -6,7 +6,6 @@
 # No warranty, explicit or implicit, provided.
 
 from __future__ import division, absolute_import, print_function, unicode_literals
-import six
 
 __author__ = 'Taylor C. Richberger <tcr@absolute-performance.com>'
 __description__ = 'A Python module for parsing and writing text-based tables'
@@ -16,4 +15,9 @@ __modulename__ = 'texttables'
 __version__ = '0.2.0'
 __website__ = 'https://github.com/Taywee/texttables'
 
-__all__ = ['fixed', 'dynamic']
+__all__ = ['fixed', 'dynamic', 'dialect', 'errors']
+
+from .errors import ValidationError
+from . import fixed
+from . import dynamic
+from .dialect import Dialect

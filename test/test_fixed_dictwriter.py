@@ -7,7 +7,7 @@ import unittest
 from six import StringIO
 
 from texttables.fixed import DictWriter
-from texttables.dialect import Dialect
+from texttables import Dialect
 
 class FixedDictWriterTest(unittest.TestCase):
     def run_asserts(self, writer, data, output):

@@ -7,9 +7,7 @@ from __future__ import division, absolute_import, print_function, unicode_litera
 import six
 
 __all__ = [
-    'reader',
     'writer',
     ]
 
 from ._writer import writer, DictWriter
-from ._reader import reader

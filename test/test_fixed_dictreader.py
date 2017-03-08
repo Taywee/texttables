@@ -7,8 +7,8 @@ import unittest
 from six import StringIO
 
 from texttables.fixed import DictReader as reader
-from texttables.dialect import Dialect
-from texttables.errors import ValidationError
+from texttables import Dialect
+from texttables import ValidationError
 
 class FixedDictReaderTest(unittest.TestCase):
     def run_unstripped_asserts(self, reader):
