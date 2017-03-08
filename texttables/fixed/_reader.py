@@ -76,13 +76,6 @@ class reader(Iterator):
         self.__first_line = True
         self.__foundrow = False
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, traceback):
-        if self.dialect.bottom_border:
-            self.writebottom()
-
     @property
     def file(self):
         return self._file
@@ -204,3 +197,50 @@ class reader(Iterator):
             raise StopIteration
         self.__first_line = False
         return self._getline(line)
+
+class DictReader(Iterator):
+
+    """Fixed-table table dictionary reader, reading tables with predefined
+    column-sizes"""
+
+    def __init__(self, file, widths, dialect=None, fieldnames=None, **fmtparams):
+        """
+        :file: An iterable object, returning a line with each iteration.
+        :widths: An iterable of widths, containing the field sizes of the table.
+            Each width may be prefixed with <, >, =, or ^, for alignment through
+            the Python format specification, though these prefixes will be ignored
+            if they are present.
+        :dialect: A dialect class or object used to define aspects of the table.
+            The stored dialect is always an instance of Dialect, not the passed-in
+            object.
+        :fmtparams: parameters to override the parameters in dialect.
+        """
+        self._reader = reader(file, widths, dialect, fieldnames, **fmtparams)
+        self._iter = iter(self._reader)
+
+    @property
+    def file(self):
+        return self._reader.file
+
+    @property
+    def widths(self):
+        return self._reader.widths
+
+    @property
+    def dialect(self):
+        return self._reader.dialect
+
+    @dialect.setter
+    def dialect(self, value):
+        self._reader.dialect = value
+
+    @property
+    def fieldnames(self):
+        return self._reader.fieldnames
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        row = next(self._iter)
+        return {key: value for key, value in zip(self.fieldnames, row)}

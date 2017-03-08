@@ -12,4 +12,4 @@ __all__ = [
     ]
 
 from ._writer import writer, DictWriter
-from ._reader import reader
+from ._reader import reader, DictReader
