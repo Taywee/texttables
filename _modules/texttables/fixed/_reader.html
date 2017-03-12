@@ -1,0 +1,361 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>texttables.fixed._reader &#8212; texttables 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for texttables.fixed._reader</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright © 2017 Taylor C. Richberger &lt;taywee@gmx.com&gt;</span>
+<span class="c1"># This code is released under the license described in the LICENSE file</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">zip</span>
+<span class="kn">from</span> <span class="nn">six</span> <span class="k">import</span> <span class="n">Iterator</span>
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="k">import</span> <span class="n">Integral</span>
+
+<span class="kn">from</span> <span class="nn">texttables.dialect</span> <span class="k">import</span> <span class="n">Dialect</span>
+<span class="kn">from</span> <span class="nn">texttables.errors</span> <span class="k">import</span> <span class="n">ValidationError</span>
+
+<div class="viewcode-block" id="reader"><a class="viewcode-back" href="../../../index.html#texttables.fixed.reader">[docs]</a><span class="k">class</span> <span class="nc">reader</span><span class="p">(</span><span class="n">Iterator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Fixed-table table reader, reading tables with predefined column-sizes.</span>
+<span class="sd">    The :class:`texttables.Dialect` class is used to configure how this reads</span>
+<span class="sd">    tables.  This is an iterable, returning rows from the table as tuples.</span>
+<span class="sd">    </span>
+<span class="sd">    Iteration can raise a :class:`texttables.ValidationError` if an invalid</span>
+<span class="sd">    table is read.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param file: An iterable object, returning a line with each iteration.</span>
+<span class="sd">        :param widths: An iterable of widths, containing the field sizes of the table.</span>
+<span class="sd">            Each width may be prefixed with &lt;, &gt;, =, or ^, for alignment through</span>
+<span class="sd">            the Python format specification, though these prefixes will be ignored</span>
+<span class="sd">            if they are present.</span>
+<span class="sd">        :param dialect: A dialect class or object used to define aspects of the</span>
+<span class="sd">            table.  The stored dialect is always an instance of</span>
+<span class="sd">            :class:`texttables.Dialect`, not necessarily the passed-in object.</span>
+<span class="sd">            All the attributes of Dialect are grabbed from this object using</span>
+<span class="sd">            getattr.</span>
+<span class="sd">        :param fieldnames: An iterable specifying the field names.  If this is</span>
+<span class="sd">            absent, field names are pulled from the table.  This will change how</span>
+<span class="sd">            the table is read.  If this parameter is present, the table may not</span>
+<span class="sd">            have a header.  If this parameter is absent, the table must have a</span>
+<span class="sd">            header.  Either way, the field names of the table must be delivered</span>
+<span class="sd">            to this class in one way, and exactly only one way.</span>
+<span class="sd">        :param fmtparams: parameters to override the parameters in</span>
+<span class="sd">            :obj:`dialect`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="n">widths</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">Integral</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">swidth</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">swidth</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">swidth</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">width</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_widths</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span> <span class="o">=</span> <span class="n">dialect</span>
+
+        <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attribute</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="n">fmtparams</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">fmtparams</span><span class="p">[</span><span class="n">attribute</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span> <span class="o">=</span> <span class="n">fieldnames</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__foundtop</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">top_border</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__top</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">top_border</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rowdelim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">top_border</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__header</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__foundheader</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__foundheader</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">header_delimiter</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">header_delimiter</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rowdelim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">header_delimiter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__foundbottom</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">bottom_border</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__finished</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__bottom</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">bottom_border</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__bottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rowdelim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">bottom_border</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__row_delimiter</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">row_delimiter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__row_delimiter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rowdelim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">row_delimiter</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__first_line</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__foundrow</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The file object that was passed in to the constructor.  It is not</span>
+<span class="sd">        safe to change this object until you are finished using the class&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">widths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The widths that were passed into the constructor, as a tuple, with</span>
+<span class="sd">        any alignments stripped.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The :class:`texttables.Dialect` constructed from the passed-in</span>
+<span class="sd">        dialect.  This is always unique, and is not the same object that is</span>
+<span class="sd">        passed in.  Assigning to this will also likewise construct a new</span>
+<span class="sd">        :class:`texttables.Dialect`, not simply assign the attribute.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span>
+
+    <span class="nd">@dialect</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span> <span class="o">=</span> <span class="n">Dialect</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">attribute</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="p">):</span>
+                <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">attribute</span><span class="p">:</span>
+                    <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">attribute</span><span class="p">))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The table&#39;s fieldnames as a tuple.  This will invoke a read on</span>
+<span class="sd">        the file if this method has not been called and this object hasn&#39;t yet</span>
+<span class="sd">        been iterated upon.</span>
+<span class="sd">        </span>
+<span class="sd">        :raises texttables.ValidationError: if the table does not properly match the dialect</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__foundtop</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="n">line</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__top</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;The first line of the table did not match what the top of the table should be&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__foundtop</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__foundheader</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="n">line</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__header</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;The header of the table wasn&#39;t properly delimited&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__foundheader</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span>
+
+    <span class="k">def</span> <span class="nf">_getline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">line</span><span class="p">):</span>
+        <span class="n">dialect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span>
+        <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">left_border</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">left_border</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;row did not have the correct left border&#39;</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">left_border</span><span class="p">):]</span>
+        <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">right_border</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">line</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">right_border</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;row did not have the correct right border&#39;</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">right_border</span><span class="p">)]</span>
+
+        <span class="n">row</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="c1"># Adding delimiter at beginning so that validation doesn&#39;t need to be</span>
+        <span class="c1"># special-cased for the first cell.</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">cell_delimiter</span> <span class="o">+</span> <span class="n">line</span>
+
+        <span class="k">for</span> <span class="n">width</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">widths</span><span class="p">:</span>
+            <span class="n">delimiter</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="nb">len</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">cell_delimiter</span><span class="p">)]</span>
+            <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="n">delimiter</span> <span class="o">!=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">cell_delimiter</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;Cell was not delimited properly&#39;</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">dialect</span><span class="o">.</span><span class="n">cell_delimiter</span><span class="p">):]</span>
+            <span class="n">contents</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:</span><span class="n">width</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">strip</span><span class="p">:</span>
+                <span class="n">contents</span> <span class="o">=</span> <span class="n">contents</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">row</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">width</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="n">line</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s1">&#39;There was garbage at the end of the input&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_rowdelim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">delimiter</span><span class="p">):</span>
+        <span class="n">dialect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span>
+        <span class="n">delimcontents</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">rawwidth</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_widths</span><span class="p">:</span>
+            <span class="n">swidth</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rawwidth</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">swidth</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">width</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">swidth</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+            <span class="n">delimcontents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">delimiter</span> <span class="o">*</span> <span class="n">width</span><span class="p">)</span>
+        <span class="n">delim</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">left_border</span><span class="p">:</span>
+            <span class="n">delim</span> <span class="o">=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">corner_border</span>
+        <span class="n">delim</span> <span class="o">+=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">corner_border</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">delimcontents</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">right_border</span><span class="p">:</span>
+            <span class="n">delim</span> <span class="o">+=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">corner_border</span>
+        <span class="k">return</span> <span class="n">delim</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fieldnames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fieldnames</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__finished</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__row_delimiter</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__first_line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">line</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__row_delimiter</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bottom</span><span class="p">:</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__foundbottom</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">__finished</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">raise</span> <span class="ne">StopIteration</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">strict</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;This row wasn&#39;t properly delimited&quot;</span><span class="p">)</span>
+                <span class="n">line</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\r\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="c1"># Try to detect if the bottom was found.  If the bottom wasn&#39;t</span>
+            <span class="c1"># found, make sure the bottom doesn&#39;t match the row delimiter, which</span>
+            <span class="c1"># would prevent the bottom from being detected at all</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">strict</span> <span class="ow">and</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__foundbottom</span> <span class="ow">or</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__row_delimiter</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__bottom</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">ValidationError</span><span class="p">(</span><span class="s2">&quot;This table wasn&#39;t properly terminated&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__first_line</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getline</span><span class="p">(</span><span class="n">line</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DictReader"><a class="viewcode-back" href="../../../index.html#texttables.fixed.DictReader">[docs]</a><span class="k">class</span> <span class="nc">DictReader</span><span class="p">(</span><span class="n">Iterator</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;Fixed-table table dictionary reader, reading tables with predefined</span>
+<span class="sd">    column-sizes. The :class:`texttables.Dialect` class is used to configure how this reads</span>
+<span class="sd">    tables.  Tables are read one row at a time.  This is a simple convenience</span>
+<span class="sd">    frontend to :class:`texttables.fixed.reader`.  This is an iterable,</span>
+<span class="sd">    returning rows from the table as dictionaries.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fieldnames</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        All the passed in construction parameters are passed to the</span>
+<span class="sd">        :class:`texttables.fixed.reader` constructor literally.  All properties</span>
+<span class="sd">        also align directly as well.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span> <span class="o">=</span> <span class="n">reader</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="n">dialect</span><span class="p">,</span> <span class="n">fieldnames</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iter</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="o">.</span><span class="n">file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">widths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="o">.</span><span class="n">widths</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="o">.</span><span class="n">dialect</span>
+
+    <span class="nd">@dialect</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="o">.</span><span class="n">dialect</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_reader</span><span class="o">.</span><span class="n">fieldnames</span>
+
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_iter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fieldnames</span><span class="p">,</span> <span class="n">row</span><span class="p">)}</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Taylor C. Richberger.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,268 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>texttables.dynamic._writer &#8212; texttables 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for texttables.dynamic._writer</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+<span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1"># Copyright © 2017 Taylor C. Richberger &lt;taywee@gmx.com&gt;</span>
+<span class="c1"># This code is released under the license described in the LICENSE file</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">absolute_import</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">unicode_literals</span>
+<span class="kn">from</span> <span class="nn">six.moves</span> <span class="k">import</span> <span class="nb">zip</span>
+
+<span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">writer</span> <span class="k">as</span> <span class="n">fixedwriter</span>
+
+<div class="viewcode-block" id="writer"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.writer">[docs]</a><span class="k">class</span> <span class="nc">writer</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dynamic-table document writer, writing tables with computed column-sizes.</span>
+<span class="sd">    The :class:`texttables.Dialect` class is used to configure how this writes</span>
+<span class="sd">    tables.  This works as a context manager, in which case :meth:`finish` will</span>
+<span class="sd">    be called automatically.</span>
+<span class="sd">    This class does not actually write anything out until :meth:`finish` is</span>
+<span class="sd">    called (or the context manager is exited) because it needs the information</span>
+<span class="sd">    from all rows before it knows how wide to make all the columns.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">alignments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        :param file: A writable file object with a ``write`` method</span>
+<span class="sd">        :param alignments: An iterable of alignments.  Each alignment may be &lt;,</span>
+<span class="sd">            &gt;, =, or ^, for alignment through the Python format specification.</span>
+<span class="sd">        :param dialect: A dialect class or object used to define aspects of the</span>
+<span class="sd">            table.  The stored dialect is always an instance of</span>
+<span class="sd">            :class:`texttables.Dialect`, not necessarily the passed-in object.</span>
+<span class="sd">            All the attributes of Dialect are grabbed from this object using</span>
+<span class="sd">            getattr.</span>
+<span class="sd">        :param fmtparams: parameters to override the parameters in</span>
+<span class="sd">            :obj:`dialect`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="n">file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_alignments</span> <span class="o">=</span> <span class="n">alignments</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span> <span class="o">=</span> <span class="n">dialect</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fmtparams</span> <span class="o">=</span> <span class="n">fmtparams</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finish</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The file object that was passed in to the constructor.  It is not</span>
+<span class="sd">        safe to change this object until you are finished using the class&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;The passed-in dialect.  This does not behave like the fixed dialects,</span>
+<span class="sd">        because it does not actually construct a :class:`texttables.Dialect`</span>
+<span class="sd">        until :meth:`finish` is called.&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span>
+
+    <span class="nd">@dialect</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get or set the total rows.  This will override all rows passed in</span>
+<span class="sd">        with :meth:`writerow` and :meth:`writerows`&#39;&#39;&#39;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span>
+
+    <span class="nd">@rows</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">rows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="writer.writeheader"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.writer.writeheader">[docs]</a>    <span class="k">def</span> <span class="nf">writeheader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">header</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set the header to be written out&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_header</span> <span class="o">=</span> <span class="n">header</span></div>
+
+<div class="viewcode-block" id="writer.writerow"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.writer.writerow">[docs]</a>    <span class="k">def</span> <span class="nf">writerow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add a row to the row set to be written out.  This does not write</span>
+<span class="sd">        anything, and is only named as such for uniformity</span>
+<span class="sd">        </span>
+<span class="sd">        :param row: an iterable representing a row to write</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="writer.writerows"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.writer.writerows">[docs]</a>    <span class="k">def</span> <span class="nf">writerows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Add rows to the row set to be written out.  This does not write</span>
+<span class="sd">        anything, and is only named as such for uniformity</span>
+
+<span class="sd">        :param rows: An iterable of iterables representing the rows to write</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="writer.finish"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.writer.finish">[docs]</a>    <span class="k">def</span> <span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Write the top, the bottom, the header (if present), and all rows out</span>
+<span class="sd">        with proper delimitation to :meth:`file`, respecting the dialect&#39;&#39;&#39;</span>
+        <span class="c1"># Initiate all widths to 0</span>
+        <span class="n">widths</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+        <span class="k">def</span> <span class="nf">checkwidths</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)):</span>
+                <span class="n">size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">widths</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+                    <span class="n">widths</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">size</span>
+
+        <span class="c1"># Iterate all rows to find which is the largest cell for each column</span>
+        <span class="n">checkwidths</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_header</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span>
+            <span class="n">checkwidths</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alignments</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">widths</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">{}{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">alignment</span><span class="p">,</span> <span class="n">width</span><span class="p">)</span> <span class="k">for</span> <span class="n">alignment</span><span class="p">,</span> <span class="n">width</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_alignments</span><span class="p">,</span> <span class="n">widths</span><span class="p">)]</span>
+
+        <span class="k">with</span> <span class="n">fixedwriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="p">,</span> <span class="n">widths</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dialect</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_fmtparams</span><span class="p">)</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
+            <span class="n">header</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_header</span>
+            <span class="k">if</span> <span class="n">header</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">writeheader</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rows</span><span class="p">:</span>
+                <span class="n">w</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> </div></div>
+
+<div class="viewcode-block" id="DictWriter"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.DictWriter">[docs]</a><span class="k">class</span> <span class="nc">DictWriter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Dynamic-table document writer, writing tables with predefined column-sizes</span>
+<span class="sd">    and names through dictionary rows passed in.</span>
+
+<span class="sd">    The :class:`texttables.Dialect` class is used to configure how this writes</span>
+<span class="sd">    tables.  This is a simple convenience frontend to</span>
+<span class="sd">    :class:`texttables.dynamic.writer`.</span>
+<span class="sd">    This works as a context manager, in which case :meth:`finish` will be called</span>
+<span class="sd">    automatically.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="p">,</span> <span class="n">fieldnames</span><span class="p">,</span> <span class="n">alignments</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        All the passed in construction parameters are passed to the</span>
+<span class="sd">        :class:`texttables.dynamic.writer` constructor literally.  All</span>
+<span class="sd">        properties and most methods also align directly as well.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span> <span class="o">=</span> <span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">alignments</span><span class="p">,</span> <span class="n">dialect</span><span class="p">,</span> <span class="o">**</span><span class="n">fmtparams</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span> <span class="o">=</span> <span class="n">fieldnames</span>
+
+    <span class="k">def</span> <span class="nf">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">__enter__</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">__exit__</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">file</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dialect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">dialect</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span>
+
+    <span class="nd">@fieldnames</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">fieldnames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="DictWriter.writeheader"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.DictWriter.writeheader">[docs]</a>    <span class="k">def</span> <span class="nf">writeheader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Set the header based on :meth:`fieldnames`.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DictWriter.writerow"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.DictWriter.writerow">[docs]</a>    <span class="k">def</span> <span class="nf">writerow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Write a row based on :meth:`fieldnames`.</span>
+
+<span class="sd">        :param row: A dictionary representing a row.&#39;&#39;&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fieldnames</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DictWriter.writerows"><a class="viewcode-back" href="../../../index.html#texttables.dynamic.DictWriter.writerows">[docs]</a>    <span class="k">def</span> <span class="nf">writerows</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rows</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Write rows based on :meth:`fieldnames`.</span>
+
+<span class="sd">        :param row: An iterable of dictionaries representing rows.&#39;&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Taylor C. Richberger.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.9</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
