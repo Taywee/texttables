@@ -209,15 +209,22 @@ class reader(Iterator):
 
         try:
             line = next(self._iter).strip('\r\n')
-            if self.__row_delimiter and not self.__first_line:
-                if line != self.__row_delimiter:
-                    if line == self.__bottom:
-                        self.__foundbottom = True
-                        self.__finished = True
-                        raise StopIteration
-                    if self.dialect.strict:
-                        raise ValidationError("This row wasn't properly delimited")
-                line = next(self._iter).strip('\r\n')
+            if self.__row_delimiter:
+                # Deal with alternating delimiters
+                if not self.__first_line:
+                    if line != self.__row_delimiter:
+                        if line == self.__bottom:
+                            self.__foundbottom = True
+                            self.__finished = True
+                            raise StopIteration
+                        if self.dialect.strict:
+                            raise ValidationError("This row wasn't properly delimited")
+                    line = next(self._iter).strip('\r\n')
+            else:
+                if line == self.__bottom:
+                    self.__foundbottom = True
+                    self.__finished = True
+                    raise StopIteration
         except StopIteration:
             # Try to detect if the bottom was found.  If the bottom wasn't
             # found, make sure the bottom doesn't match the row delimiter, which

@@ -47,6 +47,23 @@ class FixedReaderTest(unittest.TestCase):
             )
         self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
+    def test_basic_table_header_top_bottom_delim(self):
+        class dialect(Dialect):
+            header_delimiter = '='
+            top_border = '='
+            bottom_border = '='
+            corner_border = ' '
+
+        output = StringIO()
+        data = (
+            '========== ========== ==========\n'
+            'header 1   header 2   header 3  \n'
+            '========== ========== ==========\n'
+            'data 1     data 2     data 3    \n'
+            'data 4     data 5     data 6    \n'
+            '========== ========== ==========\n'
+            )
+        self.run_asserts(reader(data.splitlines(), [10, 10, 10], dialect=dialect))
 
     def test_basic_table_header_row_delim(self):
         class dialect(Dialect):
