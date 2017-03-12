@@ -646,7 +646,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">writer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">writer</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span> <span class="k">as</span> <span class="n">w</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">w</span><span class="o">.</span><span class="n">writeheader</span><span class="p">((</span><span class="s1">&#39;header 1&#39;</span><span class="p">,</span> <span class="s1">&#39;header 2&#39;</span><span class="p">,</span> <span class="s1">&#39;header 3&#39;</span><span class="p">))</span>
 <span class="gp">... </span>    <span class="n">w</span><span class="o">.</span><span class="n">writerow</span><span class="p">((</span><span class="s1">&#39;data 1&#39;</span><span class="p">,</span> <span class="s1">&#39;data 2&#39;</span><span class="p">,</span> <span class="s1">&#39;data 3&#39;</span><span class="p">))</span>
@@ -723,7 +722,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">reader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
 <span class="gp">... </span>    <span class="n">row_delimiter</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
@@ -757,7 +755,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">DictReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
 <span class="gp">... </span>    <span class="n">row_delimiter</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
@@ -790,7 +787,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">DictReader</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
 <span class="gp">... </span>    <span class="n">row_delimiter</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
@@ -829,7 +825,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.dynamic</span> <span class="k">import</span> <span class="n">writer</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
 <span class="gp">... </span>    <span class="n">row_delimiter</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
@@ -861,7 +856,6 @@ invalid table is read.</p>
 <div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.dynamic</span> <span class="k">import</span> <span class="n">DictWriter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
-<span class="go">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
 <span class="gp">... </span>    <span class="n">corner_border</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
