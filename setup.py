@@ -22,6 +22,7 @@ setup(
     packages=[
         'texttables',
         'texttables.fixed',
+        'texttables.dynamic',
         ],
     install_requires=[
         'six',
