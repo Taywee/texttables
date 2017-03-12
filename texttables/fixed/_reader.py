@@ -13,19 +13,33 @@ from texttables.errors import ValidationError
 
 class reader(Iterator):
 
-    """Fixed-table table reader, reading tables with predefined column-sizes"""
+    """Fixed-table table reader, reading tables with predefined column-sizes.
+    The :class:`texttables.Dialect` class is used to configure how this reads
+    tables.  This is an iterable, returning rows from the table as tuples.
+    
+    Iteration can raise a :class:`texttables.ValidationError` if an invalid
+    table is read."""
 
     def __init__(self, file, widths, dialect=None, fieldnames=None, **fmtparams):
         """
-        :file: An iterable object, returning a line with each iteration.
-        :widths: An iterable of widths, containing the field sizes of the table.
+        :param file: An iterable object, returning a line with each iteration.
+        :param widths: An iterable of widths, containing the field sizes of the table.
             Each width may be prefixed with <, >, =, or ^, for alignment through
             the Python format specification, though these prefixes will be ignored
             if they are present.
-        :dialect: A dialect class or object used to define aspects of the table.
-            The stored dialect is always an instance of Dialect, not the passed-in
-            object.
-        :fmtparams: parameters to override the parameters in dialect.
+        :param dialect: A dialect class or object used to define aspects of the
+            table.  The stored dialect is always an instance of
+            :class:`texttables.Dialect`, not necessarily the passed-in object.
+            All the attributes of Dialect are grabbed from this object using
+            getattr.
+        :param fieldnames: An iterable specifying the field names.  If this is
+            absent, field names are pulled from the table.  This will change how
+            the table is read.  If this parameter is present, the table may not
+            have a header.  If this parameter is absent, the table must have a
+            header.  Either way, the field names of the table must be delivered
+            to this class in one way, and exactly only one way.
+        :param fmtparams: parameters to override the parameters in
+            :obj:`dialect`.
         """
         self._file = file
         self._iter = iter(file)
@@ -40,6 +54,8 @@ class reader(Iterator):
                 except ValueError:
                     width = int(swidth[1:])
                 self._widths.append(width)
+
+        self._widths = tuple(self._widths)
 
         self.dialect = dialect
 
@@ -78,14 +94,22 @@ class reader(Iterator):
 
     @property
     def file(self):
+        '''The file object that was passed in to the constructor.  It is not
+        safe to change this object until you are finished using the class'''
         return self._file
 
     @property
     def widths(self):
+        '''The widths that were passed into the constructor, as a tuple, with
+        any alignments stripped.'''
         return self._widths
 
     @property
     def dialect(self):
+        '''The :class:`texttables.Dialect` constructed from the passed-in
+        dialect.  This is always unique, and is not the same object that is
+        passed in.  Assigning to this will also likewise construct a new
+        :class:`texttables.Dialect`, not simply assign the attribute.'''
         return self._dialect
 
     @dialect.setter
@@ -98,6 +122,13 @@ class reader(Iterator):
 
     @property
     def fieldnames(self):
+        '''The table's fieldnames as a tuple.  This will invoke a read on
+        the file if this method has not been called and this object hasn't yet
+        been iterated upon.
+        
+        :raises texttables.ValidationError: if the table does not properly match the dialect
+        '''
+
         if not self.__foundtop:
             line = next(self._iter).strip('\r\n')
             if self.dialect.strict and line != self.__top:
@@ -201,19 +232,16 @@ class reader(Iterator):
 class DictReader(Iterator):
 
     """Fixed-table table dictionary reader, reading tables with predefined
-    column-sizes"""
+    column-sizes. The :class:`texttables.Dialect` class is used to configure how this reads
+    tables.  Tables are read one row at a time.  This is a simple convenience
+    frontend to :class:`texttables.fixed.reader`.  This is an iterable,
+    returning rows from the table as dictionaries."""
 
     def __init__(self, file, widths, dialect=None, fieldnames=None, **fmtparams):
         """
-        :file: An iterable object, returning a line with each iteration.
-        :widths: An iterable of widths, containing the field sizes of the table.
-            Each width may be prefixed with <, >, =, or ^, for alignment through
-            the Python format specification, though these prefixes will be ignored
-            if they are present.
-        :dialect: A dialect class or object used to define aspects of the table.
-            The stored dialect is always an instance of Dialect, not the passed-in
-            object.
-        :fmtparams: parameters to override the parameters in dialect.
+        All the passed in construction parameters are passed to the
+        :class:`texttables.fixed.reader` constructor literally.  All properties
+        also align directly as well.
         """
         self._reader = reader(file, widths, dialect, fieldnames, **fmtparams)
         self._iter = iter(self._reader)

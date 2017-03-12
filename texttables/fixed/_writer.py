@@ -9,16 +9,25 @@ from texttables.dialect import Dialect
 
 class writer(object):
 
-    """Fixed-table document writer, writing tables with predefined column-sizes"""
+    """Fixed-table document writer, writing tables with predefined column-sizes.
+    The :class:`texttables.Dialect` class is used to configure how this writes
+    tables.  This works as a context manager, in which case :meth:`writetop` and
+    :meth:`writebottom` will be called automatically."""
+
 
     def __init__(self, file, widths, dialect=None, **fmtparams):
         """
-        :file: A writable file object with a ``write`` method
-        :dialect: A dialect class used to define aspects of the table.
-        :widths: An iterable of widths, containing the field sizes of the table.
-         Each width may be prefixed with <, >, =, or ^, for alignment through
-         the Python format specification.
-        :fmtparams: parameters to override the parameters in dialect.
+        :param file: A writable file object with a ``write`` method
+        :param widths: An iterable of widths, containing the field sizes of the table.
+            Each width may be prefixed with <, >, =, or ^, for alignment through
+            the Python format specification.
+        :param dialect: A dialect class or object used to define aspects of the
+            table.  The stored dialect is always an instance of
+            :class:`texttables.Dialect`, not necessarily the passed-in object.
+            All the attributes of Dialect are grabbed from this object using
+            getattr.
+        :param fmtparams: parameters to override the parameters in
+            :obj:`dialect`.
         """
         self._file = file
         self._widths = tuple(widths)
@@ -44,14 +53,21 @@ class writer(object):
 
     @property
     def file(self):
+        '''The file object that was passed in to the constructor.  It is not
+        safe to change this object until you are finished using the class'''
         return self._file
 
     @property
     def widths(self):
+        '''The widths that were passed into the constructor, as a tuple.'''
         return self._widths
 
     @property
     def dialect(self):
+        '''The :class:`texttables.Dialect` constructed from the passed-in
+        dialect.  This is always unique, and is not the same object that is
+        passed in.  Assigning to this will also likewise construct a new
+        :class:`texttables.Dialect`, not simply assign the attribute.'''
         return self._dialect
 
     @dialect.setter
@@ -104,6 +120,11 @@ class writer(object):
         return delim
 
     def writerow(self, row):
+        '''Write a single row out to :meth:`file`, respecting any delimiters and
+        header separators necessary.
+
+        :param row: An iterable representing the row to write
+        '''
         dialect = self.dialect
         if self.__wroteheader:
             if dialect.header_delimiter and dialect.corner_border:
@@ -121,36 +142,50 @@ class writer(object):
         self.__wroterow = True
 
     def writerows(self, rows):
+        '''Write a multiple rows out to :meth:`file`, respecting any delimiters
+        and header separators necessary.
+
+        :param rows: An iterable of iterables representing the rows to write
+        '''
         for row in rows:
             self.writerow(row)
 
     def writeheader(self, row):
+        '''Write the header out to :meth:`file`.
+
+        :param row: An iterable representing the row to write as a header
+        '''
         self.writerow(row)
         self.__wroteheader = True
 
     def writetop(self):
+        '''Write the top of the table out to :meth:`file`.'''
         dialect = self.dialect
         self._file.write(self._rowdelim(dialect.top_border))
         self._file.write(dialect.lineterminator)
 
     def writebottom(self):
+        '''Write the bottom of the table out to :meth:`file`.'''
         dialect = self.dialect
         self._file.write(self._rowdelim(dialect.bottom_border))
         self._file.write(dialect.lineterminator)
 
 class DictWriter(object):
     """Fixed-table document writer, writing tables with predefined column-sizes
-    and names"""
+    and names through dictionary rows passed in.
+
+    The :class:`texttables.Dialect` class is used to configure how this writes
+    tables.  This is a simple convenience frontend to
+    :class:`texttables.fixed.writer`.
+    This works as a context manager, in which case :meth:`writetop` and
+    :meth:`writebottom` will be called automatically.
+    """
 
     def __init__(self, file, fieldnames, widths, dialect=None, **fmtparams):
         """
-        :file: A writable file object with a ``write`` method
-        :fieldnames: A sequence of field names
-        :dialect: A dialect class used to define aspects of the table.
-        :widths: An iterable of widths, containing the field sizes of the table.
-         Each width may be prefixed with <, >, =, or ^, for alignment through
-         the Python format specification.
-        :fmtparams: parameters to override the parameters in dialect.
+        All the passed in construction parameters are passed to the
+        :class:`texttables.fixed.writer` constructor literally.  All properties
+        and most methods also align directly as well.
         """
 
         self._writer = writer(file, widths, dialect, **fmtparams)
@@ -189,12 +224,23 @@ class DictWriter(object):
         self._fieldnames = value
 
     def writeheader(self):
+        '''Write the header based on :meth:`fieldnames`.'''
         self._writer.writeheader(self._fieldnames)
 
     def writerow(self, row):
+        '''Write a single row out to :meth:`file`, respecting any delimiters and
+        header separators necessary.
+
+        :param row: A dictionary representing the row to write
+        '''
         self._writer.writerow(row[field] for field in self._fieldnames)
 
     def writerows(self, rows):
+        '''Write multiple rows out to :meth:`file`, respecting any delimiters and
+        header separators necessary.
+
+        :param row: An iterable of dictionaries representing the rows to write
+        '''
         for row in rows:
             self.writerow(row)
 

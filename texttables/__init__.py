@@ -15,7 +15,7 @@ __modulename__ = 'texttables'
 __version__ = '0.2.0'
 __website__ = 'https://github.com/Taywee/texttables'
 
-__all__ = ['fixed', 'dynamic', 'dialect', 'errors']
+__all__ = ['fixed', 'dynamic', 'ValidationError', 'Dialect']
 
 from .errors import ValidationError
 from . import fixed

@@ -4,5 +4,5 @@
 # This code is released under the license described in the LICENSE file
 
 class ValidationError(Exception):
-    '''This is raised if texttables.dialect.Dialect.strict is true and an
+    '''This is raised if :attr:`texttables.Dialect.strict` is True and an
     invalid table is read.'''
