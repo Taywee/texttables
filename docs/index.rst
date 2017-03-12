@@ -100,7 +100,6 @@ texttables.fixed.writer
     >>> from texttables import Dialect
     >>> from texttables.fixed import writer
     >>> from sys import stdout
-    >>> 
     >>> with writer(stdout, [10, 10, 10]) as w:
     ...     w.writeheader(('header 1', 'header 2', 'header 3'))
     ...     w.writerow(('data 1', 'data 2', 'data 3'))
@@ -183,7 +182,6 @@ texttables.fixed.reader
     >>> from texttables import Dialect
     >>> from texttables.fixed import reader
     >>> from sys import stdout
-    >>>
     >>> class dialect(Dialect):
     ...     header_delimiter = '='
     ...     row_delimiter = '-'
@@ -219,7 +217,6 @@ texttables.fixed.DictReader
     >>> from texttables import Dialect
     >>> from texttables.fixed import DictReader
     >>> from sys import stdout
-    >>>
     >>> class dialect(Dialect):
     ...     header_delimiter = '='
     ...     row_delimiter = '-'
@@ -254,7 +251,6 @@ texttables.ValidationError
     >>> from texttables import Dialect
     >>> from texttables.fixed import DictReader
     >>> from sys import stdout
-    >>>
     >>> class dialect(Dialect):
     ...     header_delimiter = '='
     ...     row_delimiter = '-'
@@ -295,7 +291,6 @@ texttables.dynamic.writer
     >>> from texttables import Dialect
     >>> from texttables.dynamic import writer
     >>> from sys import stdout
-    >>>
     >>> class dialect(Dialect):
     ...     header_delimiter = '='
     ...     row_delimiter = '-'
@@ -329,7 +324,6 @@ texttables.dynamic.DictWriter
     >>> from texttables import Dialect
     >>> from texttables.dynamic import DictWriter
     >>> from sys import stdout
-    >>>
     >>> class dialect(Dialect):
     ...     header_delimiter = '='
     ...     corner_border = ' '
