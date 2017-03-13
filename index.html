@@ -6,7 +6,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>texttables python module &#8212; texttables 1.0.0 documentation</title>
+    <title>texttables python module &#8212; texttables 1.0.1 documentation</title>
     
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,7 +14,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '1.0.0',
+        VERSION:     '1.0.1',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -51,6 +51,13 @@ dynamic-sized tables (where each column&#8217;s width is deduced to be the large
 element in that column) for writing only, including dict writing.</p>
 <p>There are less obvious uses to this module, such as being able to use a sort of
 TSV that is width-delimited rather than character-delimited.</p>
+<p>There are a few limitations to this module.  The most obvious are that it
+enforces some specific rules to the tables.  Cells may not span multiple rows or
+columns (and the table therefore must represent a strict integral grid), meaning
+that this can only parse a subset of allowed RST tables.  Corners must all be
+identical, including in the header and all borders (if present).  This module
+only parses text tables.  It will not assist in parsing HTML, LaTeX, or any
+other kind of markup.</p>
 <p>There is a small <a class="reference external" href="https://github.com/Taywee/texttables/tree/master/test">unit test suite</a> that attempts to
 catch obvious issues.  Pull requests to any of this module are welcome, as long
 as the license remains the same.</p>
@@ -873,6 +880,59 @@ invalid table is read.</p>
 </pre></div>
 </div>
 </div>
+<div class="section" id="rst-tables">
+<h2>RST tables<a class="headerlink" href="#rst-tables" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">DictReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">+------------------------+------------+----------+----------+</span>
+<span class="gp">... </span><span class="s1">| Header row, column 1   | Header 2   | Header 3 | Header 4 |</span>
+<span class="gp">... </span><span class="s1">+========================+============+==========+==========+</span>
+<span class="gp">... </span><span class="s1">| body row 1, column 1   | column 2   | column 3 | column 4 |</span>
+<span class="gp">... </span><span class="s1">+------------------------+------------+----------+----------+</span>
+<span class="gp">... </span><span class="s1">| body row 2             | ...        | ...      |          |</span>
+<span class="gp">... </span><span class="s1">+------------------------+------------+----------+----------+</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
+<span class="gp">... </span>    <span class="n">corner_border</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+<span class="gp">... </span>    <span class="n">top_border</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+<span class="gp">... </span>    <span class="n">bottom_border</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+<span class="gp">... </span>    <span class="n">left_border</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+<span class="gp">... </span>    <span class="n">right_border</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+<span class="gp">... </span>    <span class="n">cell_delimiter</span> <span class="o">=</span> <span class="s1">&#39;|&#39;</span>
+<span class="gp">... </span>    <span class="n">row_delimiter</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">DictReader</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(),</span> <span class="p">[</span><span class="mi">24</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">dialect</span><span class="o">=</span><span class="n">dialect</span><span class="p">)]</span>
+<span class="go">[{&#39;Header 4&#39;: &#39;column 4&#39;, &#39;Header 2&#39;: &#39;column 2&#39;, &#39;Header row, column 1&#39;: &#39;body row 1, column 1&#39;, &#39;Header 3&#39;: &#39;column 3&#39;}, {&#39;Header 4&#39;: &#39;&#39;, &#39;Header 2&#39;: &#39;...&#39;, &#39;Header row, column 1&#39;: &#39;body row 2&#39;, &#39;Header 3&#39;: &#39;...&#39;}]</span>
+</pre></div>
+</div>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables</span> <span class="k">import</span> <span class="n">Dialect</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">texttables.fixed</span> <span class="k">import</span> <span class="n">DictReader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sys</span> <span class="k">import</span> <span class="n">stdout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">===== ===== =======</span>
+<span class="gp">... </span><span class="s1">A     B     A and B</span>
+<span class="gp">... </span><span class="s1">===== ===== =======</span>
+<span class="gp">... </span><span class="s1">False False False</span>
+<span class="gp">... </span><span class="s1">True  False False</span>
+<span class="gp">... </span><span class="s1">False True  False</span>
+<span class="gp">... </span><span class="s1">True  True  True</span>
+<span class="gp">... </span><span class="s1">===== ===== =======</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">dialect</span><span class="p">(</span><span class="n">Dialect</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">header_delimiter</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
+<span class="gp">... </span>    <span class="n">corner_border</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+<span class="gp">... </span>    <span class="n">top_border</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
+<span class="gp">... </span>    <span class="n">bottom_border</span> <span class="o">=</span> <span class="s1">&#39;=&#39;</span>
+<span class="gp">... </span>    <span class="n">cell_delimiter</span> <span class="o">=</span> <span class="s1">&#39; &#39;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">row</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">DictReader</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">splitlines</span><span class="p">(),</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">dialect</span><span class="o">=</span><span class="n">dialect</span><span class="p">)]</span>
+<span class="go">[{&#39;A and B&#39;: &#39;False&#39;, &#39;A&#39;: &#39;False&#39;, &#39;B&#39;: &#39;False&#39;}, {&#39;A and B&#39;: &#39;False&#39;, &#39;A&#39;: &#39;True&#39;, &#39;B&#39;: &#39;False&#39;}, {&#39;A and B&#39;: &#39;False&#39;, &#39;A&#39;: &#39;False&#39;, &#39;B&#39;: &#39;True&#39;}, {&#39;A and B&#39;: &#39;True&#39;, &#39;A&#39;: &#39;True&#39;, &#39;B&#39;: &#39;True&#39;}]</span>
+</pre></div>
+</div>
+</div>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
@@ -923,6 +983,7 @@ invalid table is read.</p>
 <li><a class="reference internal" href="#id6">texttables.ValidationError</a></li>
 <li><a class="reference internal" href="#id7">texttables.dynamic.writer</a></li>
 <li><a class="reference internal" href="#id8">texttables.dynamic.DictWriter</a></li>
+<li><a class="reference internal" href="#rst-tables">RST tables</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>

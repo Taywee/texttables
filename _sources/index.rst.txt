@@ -17,6 +17,14 @@ element in that column) for writing only, including dict writing.
 There are less obvious uses to this module, such as being able to use a sort of
 TSV that is width-delimited rather than character-delimited.
 
+There are a few limitations to this module.  The most obvious are that it
+enforces some specific rules to the tables.  Cells may not span multiple rows or
+columns (and the table therefore must represent a strict integral grid), meaning
+that this can only parse a subset of allowed RST tables.  Corners must all be
+identical, including in the header and all borders (if present).  This module
+only parses text tables.  It will not assist in parsing HTML, LaTeX, or any
+other kind of markup.
+
 There is a small `unit test suite
 <https://github.com/Taywee/texttables/tree/master/test>`__ that attempts to
 catch obvious issues.  Pull requests to any of this module are welcome, as long
@@ -339,6 +347,62 @@ texttables.dynamic.DictWriter
     data 1 data 2 data 3
     data 4 data 5 data 6
 
+**********
+RST tables
+**********
+
+::
+
+    >>> from texttables import Dialect
+    >>> from texttables.fixed import DictReader
+    >>> from sys import stdout
+    >>> data = '''
+    ... +------------------------+------------+----------+----------+
+    ... | Header row, column 1   | Header 2   | Header 3 | Header 4 |
+    ... +========================+============+==========+==========+
+    ... | body row 1, column 1   | column 2   | column 3 | column 4 |
+    ... +------------------------+------------+----------+----------+
+    ... | body row 2             | ...        | ...      |          |
+    ... +------------------------+------------+----------+----------+
+    ... '''.strip()
+    >>> class dialect(Dialect):
+    ...     header_delimiter = '='
+    ...     corner_border = '+'
+    ...     top_border = '-'
+    ...     bottom_border = '-'
+    ...     left_border = '|'
+    ...     right_border = '|'
+    ...     cell_delimiter = '|'
+    ...     row_delimiter = '-'
+    ... 
+    >>> [row for row in DictReader(data.splitlines(), [24, 12, 10, 10], dialect=dialect)]
+    [{'Header 4': 'column 4', 'Header 2': 'column 2', 'Header row, column 1': 'body row 1, column 1', 'Header 3': 'column 3'}, {'Header 4': '', 'Header 2': '...', 'Header row, column 1': 'body row 2', 'Header 3': '...'}]
+
+::
+    
+    >>> from texttables import Dialect
+    >>> from texttables.fixed import DictReader
+    >>> from sys import stdout
+    >>> data = '''
+    ... ===== ===== =======
+    ... A     B     A and B
+    ... ===== ===== =======
+    ... False False False
+    ... True  False False
+    ... False True  False
+    ... True  True  True
+    ... ===== ===== =======
+    ... '''.strip()
+    >>> class dialect(Dialect):
+    ...     header_delimiter = '='
+    ...     corner_border = ' '
+    ...     top_border = '='
+    ...     bottom_border = '='
+    ...     cell_delimiter = ' '
+    ... 
+    >>> [row for row in DictReader(data.splitlines(), [5, 5, 7], dialect=dialect)]
+    [{'A and B': 'False', 'A': 'False', 'B': 'False'}, {'A and B': 'False', 'A': 'True', 'B': 'False'}, {'A and B': 'False', 'A': 'False', 'B': 'True'}, {'A and B': 'True', 'A': 'True', 'B': 'True'}]
+    
 ##################
 Indices and tables
 ##################
